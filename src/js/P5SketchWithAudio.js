@@ -5,8 +5,8 @@ import * as p5 from "p5";
 import { Midi } from '@tonejs/midi'
 import PlayIcon from './functions/PlayIcon.js';
 
-import audio from "../audio/circles-no-3.ogg";
-import midi from "../audio/circles-no-3.mid";
+import audio from "../audio/rectangles-no-7.ogg";
+import midi from "../audio/rectangles-no-7.mid";
 
 const P5SketchWithAudio = () => {
     const sketchRef = useRef();
@@ -21,18 +21,23 @@ const P5SketchWithAudio = () => {
 
         p.audioLoaded = false;
 
-        p.player = null;
+        p.player = null; 
 
         p.PPQ = 3840 * 4;
 
         p.loadMidi = () => {
             Midi.fromUrl(midi).then(
                 function(result) {
-                    const noteSet1 = result.tracks[5].notes; // Synth 1
+                    console.log(result);
+                    const noteSet1 = result.tracks[5].notes; // Thor 5
+                    const noteSet2 = result.tracks[9].notes; // Thor 1
+                    const noteSet3 = result.tracks[6].notes; // Thor 6
                     p.scheduleCueSet(noteSet1, 'executeCueSet1');
+                    p.scheduleCueSet(noteSet2, 'executeCueSet2');
+                    p.scheduleCueSet(noteSet3, 'executeCueSet3');
                     p.audioLoaded = true;
                     document.getElementById("loader").classList.add("loading--complete");
-                    //document.getElementById("play-icon").classList.remove("fade-out");
+                    // document.getElementById("play-icon").classList.remove("fade-out");
                 }
             );
             
@@ -58,14 +63,23 @@ const P5SketchWithAudio = () => {
             }
         } 
 
+        p.aspectRatio = 0;
         p.cellSize = 0;
-
         p.cells = [];
-
-        p.cellW = 20;
-        p.cellH = 20;
+        p.cellW = 0;
+        p.cellH = 0;
         p.nbCellW = 0;
         p.nbCellH = 0;
+
+        p.prevX = 0;
+        p.prevY = 0;
+        p.currentX = 0;
+        p.currentY = 0;
+        p.prevX2 = 0;
+        p.prevY2 = 0;
+        p.currentX2 = 0;
+        p.currentY2 = 0;
+        p.globalOpacity = 1;
 
         p.setup = () => {
             p.canvas = p.createCanvas(p.canvasWidth, p.canvasHeight);
@@ -73,28 +87,38 @@ const P5SketchWithAudio = () => {
 
             p.rectMode(p.CENTER);
             p.colorMode(p.HSB, 1);
+
+            p.aspectRatio = p.width >= p.height ? (1 / p.width * p.height) : (1 / p.height * p.width);
+            p.cellW = p.width / 96;
+            p.cellH = p.height / 54;
             
             p.nbCellW = Math.floor(p.width / p.cellW);
             p.nbCellH = Math.floor(p.height / p.cellH);
             
-            for (var i = 0; i <  p.nbCellW * p.nbCellH; i ++) {
+            for (var i = 0; i < p.nbCellW * p.nbCellH; i ++) {
                 p.cells.push(p.createVector(0, 0));
             }
+
+            p.currentX = p.width / 2;
+            p.currentY = p.height / 2;
+            p.currentX2 = p.width / 2;
+            p.currentY2 = p.height / 2;
         }
 
         p.draw = () => {
             if(p.audioLoaded && p.song.isPlaying()){
-
             }
+        }
 
-            var deltaMouse = p.createVector(p.mouseX - p.pmouseX, p.mouseY - p.pmouseY);
+        p.drawCellSet1 = () => {
+            var deltaMouse = p.createVector(p.currentX - p.prevX, p.currentY - p.prevY);
             
             for (var i = 0; i < p.nbCellW; i ++) {
                 for (var j = 0; j < p.nbCellH; j ++) {
                     var k = i + j * p.nbCellW;
                     var x =  p.cellW * i + p.cellW/2;
                     var y =  p.cellH * j + p.cellH/2;
-                    var d = Math.max(1, p.dist(p.mouseX, p.mouseY, x, y));
+                    var d = Math.max(1, p.dist(p.currentX, p.currentY, x, y));
                     
                     deltaMouse.normalize();
                     deltaMouse.mult(1/(d*30));
@@ -103,7 +127,7 @@ const P5SketchWithAudio = () => {
                     
                     var h = p.map(p.cells[k].heading(), -p.PI, p.PI, 0, 1);
                     var b = p.min(p.cells[k].mag()*100, 10);
-                    p.fill(h, 1, b);
+                    p.fill(h, 1, b, p.globalOpacity);
                     
                     p.rect(x, y, p.cellW, p.cellH);
                     
@@ -112,13 +136,109 @@ const P5SketchWithAudio = () => {
             }
         }
 
-        p.executeCueSet1 = (note) => {
-            // p.background(p.random(255), p.random(255), p.random(255));
-            // p.fill(p.random(255), p.random(255), p.random(255));
-            // p.noStroke();
-            // p.ellipse(p.width / 2, p.height / 2, p.width / 4, p.width / 4);
+        p.drawCellSet2 = () => {
+            var deltaMouse = p.createVector(p.currentX2 - p.prevX2, p.currentY2 - p.prevY2);
+            
+            for (var i = 0; i < p.nbCellW; i ++) {
+                for (var j = 0; j < p.nbCellH; j ++) {
+                    var k = i + j * p.nbCellW;
+                    var x =  p.cellW * i + p.cellW/2;
+                    var y =  p.cellH * j + p.cellH/2;
+                    var d = Math.max(1, p.dist(p.currentX2, p.currentY2, x, y));
+                    
+                    deltaMouse.normalize();
+                    deltaMouse.mult(1/(d*30));
+                    p.cells[k].add(deltaMouse);
+                    p.cells[k].limit(10);
+                    
+                    var h = p.map(p.cells[k].heading(), -p.PI, p.PI, 0, 1);
+                    var s = p.min(p.cells[k].mag()*100, 10);
+                    p.fill(h, s, 1, p.globalOpacity);
+                    
+                    p.rect(x, y, p.cellW, p.cellH);
+                    
+                    p.cells[k].mult(.98);
+                }
+            }
         }
 
+
+        p.executeCueSet1 = (note) => {
+            const { currentCue } = note;
+            p.globalOpacity = currentCue % 2 === 0 ? 0.6 : 0.3;
+            const cellSizes = [
+                {
+                    x: p.width / 48,
+                    y: p.height / 27,
+                },
+                {
+                    x: p.width / 32,
+                    y: p.height / 18,
+                },
+                {
+                    x: p.width / 16,
+                    y: p.height / 9,
+                },
+                {
+                    x: p.width / 12,
+                    y: p.height / 6,
+                }
+            ];
+            
+            if(currentCue <= 24) {
+                p.cells = [];
+                p.cellW = currentCue % 2 === 0 ? p.width / 96 : cellSizes[((currentCue % 8 - 1) / 2)].x;
+                p.cellH = currentCue % 2 === 0 ? p.height / 54 : cellSizes[((currentCue % 8 - 1) / 2)].y;
+                p.nbCellW = Math.floor(p.width / p.cellW);
+                p.nbCellH = Math.floor(p.height / p.cellH);
+                
+                for (var i = 0; i < p.nbCellW * p.nbCellH; i ++) {
+                    p.cells.push(p.createVector(0, 0));
+                }
+            }
+        }
+
+        p.executeCueSet2 = (note) => {
+            const { currentCue, midi } = note;
+            const delay = 5;
+
+            p.prevX = p.currentX;
+            p.prevY = p.currentY;
+            p.currentX = midi > 70 ? p.random(p.width / 2 , p.width) : p.random(0, p.width / 2);
+            p.currentY = p.random(0, p.height);
+
+            for (let i = 0; i < 5; i++) {
+                setTimeout(
+                    function () {
+                        p.drawCellSet1();
+                    },
+                    (delay * i)
+                );
+            }
+        }
+
+        p.executeCueSet3 = (note) => {
+            const { currentCue } = note;
+            const myModulo = currentCue % 3;
+            const delay = 2;
+            p.globalOpacity = 0.5;
+
+            p.prevX2 = p.currentX2;
+            p.prevY2 = p.currentY2;
+            p.currentX2 = p.width / 2;
+            p.currentY2 = p.height / 4 * (myModulo + 1);
+
+            for (let i = 0; i < 5; i++) {
+                setTimeout(
+                    function () {
+                        p.drawCellSet2();
+                    },
+                    (delay * i)
+                );
+                
+            }
+        }
+        
         p.mousePressed = () => {
             if(p.audioLoaded){
                 if (p.song.isPlaying()) {
