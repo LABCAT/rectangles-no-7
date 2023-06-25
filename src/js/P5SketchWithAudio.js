@@ -88,7 +88,8 @@ const P5SketchWithAudio = () => {
             p.rectMode(p.CENTER);
             p.colorMode(p.HSB, 1);
 
-            p.aspectRatio = p.width >= p.height ? (1 / p.width * p.height) : (1 / p.height * p.width);
+            // this would be a better way to determine cell size:
+            // https://math.stackexchange.com/questions/921539/maximum-square-cells-in-a-rectangle
             p.cellW = p.width / 96;
             p.cellH = p.height / 54;
             
