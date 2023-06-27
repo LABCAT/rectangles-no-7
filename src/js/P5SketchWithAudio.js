@@ -37,7 +37,7 @@ const P5SketchWithAudio = () => {
                     p.scheduleCueSet(noteSet3, 'executeCueSet3');
                     p.audioLoaded = true;
                     document.getElementById("loader").classList.add("loading--complete");
-                    // document.getElementById("play-icon").classList.remove("fade-out");
+                    document.getElementById("play-icon").classList.remove("fade-out");
                 }
             );
             
@@ -248,7 +248,7 @@ const P5SketchWithAudio = () => {
                     if (parseInt(p.song.currentTime()) >= parseInt(p.song.buffer.duration)) {
                         p.reset();
                     }
-                    //document.getElementById("play-icon").classList.add("fade-out");
+                    document.getElementById("play-icon").classList.add("fade-out");
                     p.song.play();
                 }
             }
@@ -311,6 +311,7 @@ const P5SketchWithAudio = () => {
 
     return (
         <div ref={sketchRef}>
+            <PlayIcon />
         </div>
     );
 };
